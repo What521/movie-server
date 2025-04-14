@@ -1,15 +1,28 @@
 const express = require("express");
+const multer = require("multer");
 const cors = require("cors");
 const app = express();
 app.use(express.static("public"));
 app.use(express.json());
 app.use(cors());
+const Joi = require("joi");
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+      cb(null, "./public/images/");
+    },
+    filename: (req, file, cb) => {
+      cb(null, file.originalname);
+    },
+  });
+
+const upload = multer({ storage: storage });
 
 app.get("/",(req, res)=>{
     res.sendFile(__dirname+"/index.html");
 });
 
-let houses = [
+let movies = [
     {
         be_id: "1",
         title: "John Wick",
@@ -120,8 +133,48 @@ let houses = [
 ];
 
 app.get("/api/movies", (req, res)=>{
-    res.send(houses);
+    res.send(movies);
 })
+
+app.post("/api/movies", upload.single("img"), (req,res)=>{
+    const result = validateMovie(req.body);
+
+
+    if(result.error){
+        console.log("I have an error");
+        res.status(400).send(result.error.deatils[0].message);
+        return;
+    }
+
+    const movie = {
+        be_id: movies.length,
+        title:req.body.title,
+        cast: req.body.cast,
+        year: req.body.year,
+        rating: req.body.rating
+    };
+
+    if(req.file){
+        movie.main_image = req.file.filename;
+    }
+
+    movies.push(movie);
+    res.status(200).send(movie);
+});
+
+const validateMovie = (Movie) => {
+    const schema = Joi.object({
+        be_id:Joi.allow(""),
+        title:Joi.string().min(3).required(),
+        genre:Joi.string().required(),
+        cast:Joi.string().required(),
+        year:Joi.number().required().min(1000),
+        rating:Joi.string().required(),
+    });
+
+    return schema.validate(Movie);
+};
+
 
 app.listen(3001, ()=>{
     console.log("i'm listening");
