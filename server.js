@@ -25,7 +25,7 @@ app.get("/",(req, res)=>{
 });
 
 mongoose
-  .connect("mongodb+srv://rg50:George521!@cluster0.qq9s0li.mongodb.net/")
+  .connect("mongodb+srv://rg50:George521@cluster0.qq9s0li.mongodb.net/")
   .then(() => {
     console.log("connected to mongodb");
   })
